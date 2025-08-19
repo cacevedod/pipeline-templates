@@ -1,7 +1,12 @@
 @Library('pipeline-templates@main') _
 
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.11'
+            args '-u root:root'
+        }
+    }
     stages {
         stage('CI para Proyecto Python') {
             steps {
