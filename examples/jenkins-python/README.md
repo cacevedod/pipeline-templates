@@ -47,6 +47,23 @@ A partir de Jenkins LTS recientes, los siguientes plugins no vienen instalados p
 
 Guarda los cambios.
 
+
+## ⚠️ Recuerda configurar el secret `sonar-token` en Jenkins
+
+Para que el pipeline pueda ejecutar análisis con SonarQube, debes crear una credencial tipo **Secret text** en Jenkins con el nombre exacto `sonar-token` y el valor del token de tu usuario en SonarQube.
+
+1. Ve a **Manage Jenkins > Manage Credentials**.
+2. Selecciona el dominio adecuado (o global).
+3. Haz clic en **Add Credentials**.
+4. Tipo: **Secret text**
+5. **Secret**: (tu token de SonarQube)
+6. **ID**: `sonar-token`
+7. Guarda.
+
+Sin esta credencial, el pipeline fallará al intentar ejecutar SonarQube.
+
+---
+
 ## Configuración del SonarQube Scanner en Jenkins
 
 1. Ve a **Manage Jenkins > Global Tool Configuration**.

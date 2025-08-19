@@ -4,77 +4,52 @@ def call(Map config = [:]) {
     def runDocker = config.runDocker == true
     def runCheckov = config.runCheckov == true
     def runPublishArtifact = config.runPublishArtifact == true
-
-    pipeline {
-        agent any
-        environment {
-            SONAR_TOKEN = credentials('sonar-token')
-            DOCKER_REGISTRY = credentials('docker-registry')
+    def runTests = config.runTests != false
+    def pythonPath = config.path ?: '.'
+    dir(pythonPath) {
+        stage('Checkout') {
+            checkout scm
         }
-        stages {
-            stage('Checkout') {
-                steps {
-                    checkout scm
-                }
-            }
-            stage('Install dependencies') {
-                steps {
-                    sh 'python -m pip install --upgrade pip'
-                    sh 'pip install -r requirements.txt'
-                }
-            }
+        stage('Install dependencies') {
+            sh 'python -m pip install --upgrade pip'
+            sh 'pip install -r requirements.txt'
+        }
+        if (runTests) {
             stage('Unit Test') {
-                when {
-                    expression { config.runTests != false }
-                }
-                steps {
-                    sh 'pytest'
-                }
+                sh 'pytest'
             }
-            stage('SonarQube Analysis') {
-                when {
-                    expression { runSonar && env.SONAR_TOKEN }
-                }
-                steps {
+        }
+        if (runSonar) {
+            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                stage('SonarQube Analysis') {
                     withSonarQubeEnv('SonarQubeServer') {
                         sh 'sonar-scanner'
                     }
                 }
-            }
-            stage('Quality Gate') {
-                when {
-                    expression { runSonar && env.SONAR_TOKEN }
-                }
-                steps {
+                stage('Quality Gate') {
                     timeout(time: 5, unit: 'MINUTES') {
                         waitForQualityGate abortPipeline: true
                     }
                 }
             }
+        }
+        if (runCheckov) {
             stage('Checkov') {
-                when {
-                    expression { runCheckov }
-                }
-                steps {
-                    sh 'pip install checkov'
-                    sh 'checkov -d .'
-                }
+                sh 'pip install checkov'
+                sh 'checkov -d .'
             }
+        }
+        if (runPublishArtifact) {
             stage('Publish Artifact') {
-                when {
-                    expression { runPublishArtifact }
-                }
-                steps {
-                    archiveArtifacts artifacts: 'dist/*.whl', fingerprint: true
-                }
+                archiveArtifacts artifacts: 'dist/*.whl', fingerprint: true
             }
-            stage('Build & Push Docker Image') {
-                when {
-                    expression { runDocker && env.DOCKER_REGISTRY }
-                }
-                steps {
+        }
+        if (runDocker) {
+            withCredentials([usernamePassword(credentialsId: 'docker-registry', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                stage('Build & Push Docker Image') {
                     script {
-                        dockerImage = docker.build("${DOCKER_REGISTRY}/${env.JOB_NAME}:${env.BUILD_NUMBER}")
+                        def imageName = "${DOCKER_USERNAME}/${env.JOB_NAME}:${env.BUILD_NUMBER}"
+                        def dockerImage = docker.build(imageName)
                         docker.withRegistry('', 'docker-registry') {
                             dockerImage.push()
                         }
