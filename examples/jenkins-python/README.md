@@ -14,7 +14,17 @@ Este ejemplo muestra cómo usar el template de CI para Python en Jenkins.
 | pythonVersion | Versión de Python a usar en el pipeline (ej: '3.11')     |
 | path          | Ruta al código fuente o raíz del proyecto (ej: 'app')    |
 
+
 ## Prerrequisito: Instalar plugins necesarios
+
+### Para usar agentes Docker en Jenkins
+
+Si quieres que el pipeline corra en un contenedor Python (como en este ejemplo), necesitas:
+
+- Instalar el plugin **Docker Pipeline** desde *Manage Jenkins > Manage Plugins*.
+- Que Jenkins tenga acceso al demonio Docker (por ejemplo, usando Docker in Docker o montando el socket `/var/run/docker.sock`).
+
+Sin este plugin, el bloque `agent { docker { ... } }` no funcionará y el pipeline fallará.
 
 A partir de Jenkins LTS recientes, los siguientes plugins no vienen instalados por defecto y son necesarios:
 
@@ -22,7 +32,9 @@ A partir de Jenkins LTS recientes, los siguientes plugins no vienen instalados p
 2. Busca e instala los plugins:
    - **Pipeline** (permite ejecutar pipelines con Jenkinsfile)
    - **Pipeline: Shared Groovy Libraries**
-   - **Git client plugin**
+   - **Git**
+   - **Git client**
+   - **Docker Pipeline**
    - **SonarQube Scanner** (para integración con SonarQube)
 
 ![Instalación del plugin de librerías globales](img/instalar-plugin.png)

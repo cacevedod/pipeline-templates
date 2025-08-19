@@ -1,16 +1,39 @@
-version: '3.8'
-
 services:
+  dind:
+    image: docker:dind
+    container_name: dind
+    privileged: true
+    volumes:
+      - jenkins_docker_certs:/certs/client
+      - docker_data:/var/lib/docker
+    environment:
+      DOCKER_TLS_CERTDIR: /certs
+    networks:
+      default:
+        aliases:
+          - docker
+    restart: unless-stopped
+
   jenkins:
-    image: jenkins/jenkins:lts
+    build: .
     container_name: jenkins
+    depends_on:
+      - dind
     ports:
       - "8080:8080"
       - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
+      - jenkins_docker_certs:/certs/client:ro
+      - ./jenkins-config:/var/jenkins_home/casc_configs
     environment:
+      DOCKER_HOST: tcp://docker:2376
+      DOCKER_CERT_PATH: /certs/client
+      DOCKER_TLS_VERIFY: "1"
       JAVA_OPTS: -Djenkins.install.runSetupWizard=false
+      #CASC_JENKINS_CONFIG: "/var/jenkins_home/casc_configs"
+      SONAR_TOKEN: ${SONAR_TOKEN}
+    user: root 
     restart: unless-stopped
 
   sonarqube:
@@ -27,6 +50,7 @@ services:
     volumes:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
     restart: unless-stopped
 
   db:
@@ -42,6 +66,9 @@ services:
 
 volumes:
   jenkins_home:
+  jenkins_docker_certs:
+  docker_data:
   sonarqube_data:
   sonarqube_extensions:
+  sonarqube_logs:
   postgresql:

@@ -1,0 +1,9 @@
+workflow-aggregator:latest
+git:latest
+git-client:latest
+pipeline-groovy-lib:latest
+docker-workflow:latest
+sonar:latest
+configuration-as-code:latest
+credentials:latest
+plain-credentials:latest

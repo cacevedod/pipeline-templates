@@ -1,0 +1,70 @@
+# jenkins-config/casc.yaml
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - secretText:
+              id: "sonarqube-token"
+              secret: "${SONAR_TOKEN}"
+              description: "Token de autenticación para SonarQube"
+
+jenkins:
+  systemMessage: "Jenkins configurado automáticamente con JCasC ✨"
+
+tool:
+  git:
+    installations:
+      - name: "Default"
+        home: "git"
+  hudson.plugins.sonar.SonarRunnerInstallation:
+    installations:
+      - name: "SonarScanner-Latest"
+        properties:
+          - installSource:
+              installers:
+                - sonarRunnerInstaller:
+                    id: "latest"
+
+unclassified:
+  sonarGlobalConfiguration:
+    installations:
+      - name: "SonarQube-Principal"
+        serverUrl: "http://sonarqube:9000"
+        serverAuthenticationTokenId: "sonarqube-token"
+  globalLibraries:
+    libraries:
+      - name: "pipeline-templates"
+        retriever:
+          modernSCM:
+            scm:
+              git:
+                remote: "https://github.com/cacevedod/pipeline-templates.git"
+        defaultVersion: "main"
+        implicit: false
+        libraryPath: "jenkins"
+        allowVersionOverride: true
+        includeInChanges: true
+        trusted: true
+
+jobs:
+  - script: >
+      multibranchPipelineJob('example-python') {
+        branchSources {
+          git {
+            id = 'unique-id-for-this-source'
+            remote('https://github.com/cacevedod/pipeline-templates.git')
+          }
+        }
+        orphanedItemStrategy {
+          discardOldItems {
+            daysToKeep(7)
+            numToKeep(10)
+          }
+        }
+        factory {
+          workflowBranchProjectFactory {
+            scriptPath("examples/jenkins-python/Jenkinsfile")
+          }
+        }
+      }
