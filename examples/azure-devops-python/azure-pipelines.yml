@@ -1,0 +1,18 @@
+pool:
+  vmImage: "ubuntu-latest"
+
+trigger:
+  - main
+
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: cacevedod/pipeline-templates
+      ref: refs/heads/main
+
+  template: azure-devops/python-ci-template.yml@templates
+  parameters:
+    pythonVersion: "3.11"
+    runTests: true
+      pip install -r requirements.txt

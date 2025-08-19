@@ -1,0 +1,53 @@
+parameters:
+  - name: pythonVersion
+    type: string
+    default: "3.11"
+  - name: runTests
+    type: boolean
+    default: true
+
+jobs:
+  - job: build
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - checkout: self
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: ${{ parameters.pythonVersion }}
+      - script: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        displayName: "Install dependencies"
+      - script: pytest
+        displayName: "Run unit tests"
+        condition: eq('${{ parameters.runTests }}', true)
+      - task: SonarQubePrepare@5
+        condition: and(succeeded(), ne(variables['SONAR_TOKEN'], ''))
+        inputs:
+          SonarQube: "SonarQubeServiceConnection"
+          scannerMode: "CLI"
+          configMode: "manual"
+          cliProjectKey: "$(Build.Repository.Name)"
+          cliProjectName: "$(Build.Repository.Name)"
+      - script: sonar-scanner
+        displayName: "Run SonarQube analysis"
+        condition: and(succeeded(), ne(variables['SONAR_TOKEN'], ''))
+      - task: SonarQubeAnalyze@5
+        displayName: "Check Sonar Quality Gate"
+        condition: and(succeeded(), ne(variables['SONAR_TOKEN'], ''))
+      - script: |
+          pip install checkov
+          checkov -d .
+        displayName: "Run Checkov on Docker and K8s files"
+      - publish: $(System.DefaultWorkingDirectory)/dist/*.whl
+        artifact: app-wheel
+      - task: Docker@2
+        displayName: "Build and push Docker image"
+        condition: and(succeeded(), ne(variables['DOCKER_REGISTRY'], ''))
+        inputs:
+          command: buildAndPush
+          repository: $(DOCKER_REGISTRY)/$(Build.Repository.Name)
+          dockerfile: "**/Dockerfile"
+          tags: $(Build.BuildId)
+          containerRegistry: "DockerRegistryServiceConnection"
