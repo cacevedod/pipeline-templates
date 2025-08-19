@@ -1,4 +1,10 @@
 def call(Map config = [:]) {
+    // Valores por defecto para features opcionales
+    def runSonar = config.runSonar == true
+    def runDocker = config.runDocker == true
+    def runCheckov = config.runCheckov == true
+    def runPublishArtifact = config.runPublishArtifact == true
+
     pipeline {
         agent any
         environment {
@@ -27,7 +33,7 @@ def call(Map config = [:]) {
             }
             stage('SonarQube Analysis') {
                 when {
-                    expression { env.SONAR_TOKEN }
+                    expression { runSonar && env.SONAR_TOKEN }
                 }
                 steps {
                     withSonarQubeEnv('SonarQubeServer') {
@@ -37,7 +43,7 @@ def call(Map config = [:]) {
             }
             stage('Quality Gate') {
                 when {
-                    expression { env.SONAR_TOKEN }
+                    expression { runSonar && env.SONAR_TOKEN }
                 }
                 steps {
                     timeout(time: 5, unit: 'MINUTES') {
@@ -46,19 +52,25 @@ def call(Map config = [:]) {
                 }
             }
             stage('Checkov') {
+                when {
+                    expression { runCheckov }
+                }
                 steps {
                     sh 'pip install checkov'
                     sh 'checkov -d .'
                 }
             }
             stage('Publish Artifact') {
+                when {
+                    expression { runPublishArtifact }
+                }
                 steps {
                     archiveArtifacts artifacts: 'dist/*.whl', fingerprint: true
                 }
             }
             stage('Build & Push Docker Image') {
                 when {
-                    expression { env.DOCKER_REGISTRY }
+                    expression { runDocker && env.DOCKER_REGISTRY }
                 }
                 steps {
                     script {

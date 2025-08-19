@@ -1,5 +1,18 @@
 @Library('pipeline-templates@main') _
 
-pythonCi(
-    runTests: true
-)
+pipeline {
+    agent any
+    stages {
+        stage('CI para Proyecto Python') {
+            steps {
+                script {
+                    pythonCi(
+                        pythonVersion: '3.11',
+                        path: 'app',
+                        runSonar: true
+                    )
+                }
+            }
+        }
+    }
+}

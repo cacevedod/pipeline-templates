@@ -1,4 +1,4 @@
-# DevCo Pipeline Templates
+# Devco Pipeline Templates
 
 Este repositorio centraliza plantillas reutilizables de CI/CD para:
 
@@ -42,11 +42,11 @@ El objetivo es permitir que los proyectos referencien estas plantillas directame
 
 ## Referencias y Ejemplos
 
-Para guías de uso detalladas y ejemplos prácticos, consulta el `README.md` correspondiente dentro de cada subcarpeta en `examples/`:
+Para guías de uso detalladas y ejemplos prácticos, consulta el README correspondiente de cada sistema:
 
-- `examples/azure-devops-python/README.md`
-- `examples/github-actions-python/README.md`
-- `examples/jenkins-python/README.md`
+- [Ejemplo Azure DevOps](examples/azure-devops-python/README.md)
+- [Ejemplo GitHub Actions](examples/github-actions-python/README.md)
+- [Ejemplo Jenkins](examples/jenkins-python/README.md)
 
 ---
 Si agregas nuevas plantillas o cambias patrones de integración, actualiza este archivo y los proyectos de ejemplo relevantes.
