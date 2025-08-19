@@ -7,9 +7,6 @@ def call(Map config = [:]) {
     def runTests = config.runTests != false
     def pythonPath = config.path ?: '.'
     dir(pythonPath) {
-        stage('Checkout') {
-            checkout scm
-        }
         stage('Install dependencies') {
             sh 'python -m pip install --upgrade pip'
             sh 'pip install -r requirements.txt'
