@@ -148,7 +148,7 @@ def call(Map config = [:]) {
                                         sh '''
                                             . .venv/bin/activate
                                             pip install checkov
-                                            python -m checkov -d .
+                                            checkov -d .
                                         '''
                                     }
                                 }
