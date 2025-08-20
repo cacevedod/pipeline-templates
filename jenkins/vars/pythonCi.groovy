@@ -14,8 +14,17 @@ def call(Map config = [:]) {
             stage('Instalación de dependencias') {
                 steps {
                     dir(pythonPath) {
-                        sh 'python3 -m pip install --upgrade pip'
-                        sh 'python3 -m pip install -r requirements.txt'
+                        sh '''
+                            # Crear entorno virtual si no existe
+                            if [ ! -d ".venv" ]; then
+                                python3 -m venv .venv
+                            fi
+                            # Activar entorno virtual
+                            . .venv/bin/activate
+                            # Instalar dependencias
+                            python -m pip install --upgrade pip
+                            pip install -r requirements.txt
+                        '''
                     }
                 }
             }
@@ -23,7 +32,12 @@ def call(Map config = [:]) {
             stage('Pruebas unitarias') {
                 steps {
                     dir(pythonPath) {
-                        sh 'python3 -m pytest'
+                        sh '''
+                            # Activar entorno virtual
+                            . .venv/bin/activate
+                            # Ejecutar pruebas
+                            python -m pytest
+                        '''
                     }
                 }
             }
@@ -72,8 +86,13 @@ def call(Map config = [:]) {
                 }
                 steps {
                     dir(pythonPath) {
-                        // sh 'python3 -m pip install checkov' Instalado desde el inicio
-                        sh 'python3 -m checkov -d .'
+                        sh '''
+                            # Activar entorno virtual
+                            . .venv/bin/activate
+                            # Instalar y ejecutar Checkov
+                            pip install checkov
+                            python -m checkov -d .
+                        '''
                     }
                 }
             }
