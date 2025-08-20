@@ -1,5 +1,5 @@
 @Library('pipeline-templates@main') _
 
 pythonCi(
-    path: 'app'
+    path: '.'
 )
