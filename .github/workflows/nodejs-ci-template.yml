@@ -1,9 +1,5 @@
 name: Node.js Reusable CI Advanced
 
-permissions:
-  checks: write
-  contents: read
-
 on:
   workflow_call:
     inputs:
