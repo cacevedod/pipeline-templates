@@ -4,6 +4,12 @@ module.exports = {
   coverageDirectory: 'coverage',
   reporters: [
     'default',
-    ['jest-junit', { outputDirectory: '.', outputName: 'jest-junit.xml' }]
+      [
+        'jest-junit',
+        {
+          outputDirectory: process.env.JEST_JUNIT_OUTPUT_DIR || '.',
+          outputName: process.env.JEST_JUNIT_OUTPUT_NAME || 'jest-junit.xml',
+        },
+      ],
   ]
 };

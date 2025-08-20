@@ -65,9 +65,22 @@ jobs:
 > **Importante:** No copies todo el pipeline, solo referencia el template y ajusta los parámetros. Así, cualquier mejora en el template se replica automáticamente en tu proyecto.
 
 ## Requisitos
-- Node.js >= 20
-- Docker (opcional para build de imagen)
 
----
 
 > Sigue las mejores prácticas de Node.js y adapta este template según tus necesidades.
+
+## Visualización de resultados en GitHub Actions
+
+### Reporte visual de pruebas unitarias
+
+El pipeline utiliza la acción [dorny/test-reporter](https://github.com/dorny/test-reporter) para mostrar los resultados de los tests unitarios en la pestaña **Checks** de cada pull request o commit. Esto permite ver fácilmente qué pruebas pasaron o fallaron, sin revisar los logs.
+
+- El reporte se genera automáticamente a partir del archivo `jest-junit.xml`.
+- Si hay fallos, se muestran en la interfaz de GitHub Actions.
+
+### Enlace directo al informe de SonarQube
+
+Si la opción de análisis SonarQube está habilitada, el pipeline publica un enlace directo al dashboard del proyecto en la pestaña **Summary** del job correspondiente. Así puedes acceder rápidamente al informe de calidad y cobertura de código.
+
+- El enlace aparece como: `🔗 Ver informe SonarQube` en el resumen del job.
+- Asegúrate de tener configurada la variable `SONAR_HOST_URL` en los secretos del repositorio.
