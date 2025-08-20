@@ -146,9 +146,11 @@ def call(Map config = [:]) {
                                 steps {
                                     dir(pythonPath) {
                                         sh '''
-                                            . .venv/bin/activate
+                                            python3 -m venv .venv-checkov
+                                            . .venv-checkov/bin/activate
+                                            pip install --upgrade pip
                                             pip install checkov
-                                            checkov -d .
+                                            .venv-checkov/bin/checkov -d .
                                         '''
                                     }
                                 }
