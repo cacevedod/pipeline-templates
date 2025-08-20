@@ -148,6 +148,22 @@ Guarda los cambios.
 
 Guarda los cambios.
 
+## ⚠️ Configurar Webhook de SonarQube para Quality Gates
+
+Para que los Quality Gates funcionen correctamente, **es necesario configurar un webhook en SonarQube** que notifique a Jenkins cuando el análisis se completa:
+
+1. Inicia sesión en SonarQube con permisos de administrador.
+2. Ve a **Administration > Configuration > Webhooks**.
+3. Haz clic en **Create**.
+4. Completa el formulario:
+   - **Name**: `Jenkins` (o un nombre descriptivo)
+   - **URL**: `http://jenkins:8080/sonarqube-webhook/` (ajusta la URL según tu configuración)
+   - **Secret**: Puedes dejarlo en blanco o configurar un secreto para mayor seguridad
+
+![Configuración del webhook de SonarQube](img/sonar-webhook.png)
+
+> **⚠️ Importante**: Sin este webhook, el pipeline se quedará esperando indefinidamente en el paso de Quality Gate o fallará con error de timeout. El webhook es lo que permite a SonarQube notificar a Jenkins cuando el análisis se completa.
+
 ## Configuración de un pipeline Multibranch usando el template
 
 1. Ve a **New Item** en Jenkins y selecciona **Multibranch Pipeline**.
