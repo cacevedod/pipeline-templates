@@ -4,32 +4,32 @@ on:
   workflow_call:
     inputs:
       working-directory:
-        description: 'Directory where the node project is located'
+        description: "Directory where the node project is located"
         required: false
         type: string
-        default: '.'
+        default: "."
       node-version:
-        description: 'Node.js version to use'
+        description: "Node.js version to use"
         required: false
         type: string
         default: "20"
       run-sonar:
-        description: 'Run SonarQube analysis'
+        description: "Run SonarQube analysis"
         required: false
         type: boolean
         default: false
       run-checkov:
-        description: 'Run Checkov IaC scan'
+        description: "Run Checkov IaC scan"
         required: false
         type: boolean
         default: false
       run-docker-build:
-        description: 'Build Docker image'
+        description: "Build Docker image"
         required: false
         type: boolean
         default: false
       run-docker-push:
-        description: 'Push Docker image to GHCR'
+        description: "Push Docker image to GHCR"
         required: false
         type: boolean
         default: false
@@ -40,7 +40,6 @@ on:
         required: false
 
 jobs:
-  # --- JOB 1: PASOS INICIALES (Instalación y Pruebas) ---
   initial-steps:
     runs-on: ubuntu-latest
     defaults:
@@ -50,14 +49,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Necesario para SonarQube
+          fetch-depth: 0
 
       - name: Set up Node.js ${{ inputs.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: 'npm'
-          cache-dependency-path: '${{ inputs.working-directory }}/package-lock.json'
+          cache: "npm"
+          cache-dependency-path: "${{ inputs.working-directory }}/package-lock.json"
 
       - name: Install dependencies
         run: npm ci
@@ -72,9 +71,8 @@ jobs:
           path: |
             ${{ inputs.working-directory }}/coverage/
             ${{ inputs.working-directory }}/jest-junit.xml
-          retention-days: 1 # Guarda los artefactos solo por 1 día
+          retention-days: 1
 
-  # --- JOB 2 (PARALELO): SONARQUBE ---
   sonarqube-analysis:
     runs-on: ubuntu-latest
     needs: initial-steps
@@ -95,15 +93,16 @@ jobs:
         uses: sonarsource/sonarqube-scan-action@master
         with:
           projectBaseDir: ${{ inputs.working-directory }}
-          # El Quality Gate se revisa automáticamente al final del scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-  # --- JOB 3 (PARALELO): CHECKOV Y DOCKER BUILD ---
   security-and-build:
     runs-on: ubuntu-latest
     needs: initial-steps
+    # --- LÍNEA AÑADIDA ---
+    # Este job solo se ejecuta si se activa checkov O docker build
+    if: ${{ inputs.run-checkov == true || inputs.run-docker-build == true }}
     permissions:
       contents: read
       packages: write
@@ -125,11 +124,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image
+      - name: Build and Push Docker image
         if: ${{ inputs.run-docker-build == true }}
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.working-directory }}
-          # push se controla con otro input
           push: ${{ inputs.run-docker-push == true }}
           tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
