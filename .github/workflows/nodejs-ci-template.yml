@@ -85,7 +85,7 @@ jobs:
           name: node-modules-${{ github.run_id }}
           path: ${{ inputs.working-directory }}/node_modules/
       - name: Run unit tests
-        run: npm test
+        run: npm run test:ci
       - name: Upload Test and Coverage Reports
         uses: actions/upload-artifact@v4
         with:
