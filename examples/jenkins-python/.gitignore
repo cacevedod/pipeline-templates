@@ -27,6 +27,14 @@ env/
 venv/
 ENV/
 
+# Entornos virtuales de herramientas CI/CD
+.venv-checkov/
+
+# Artefactos de Checkov
+.checkov.common.metrics
+.checkov.log
+.checkov/
+
 # Cobertura y testing
 .coverage
 htmlcov/
