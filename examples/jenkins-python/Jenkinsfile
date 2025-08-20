@@ -2,6 +2,7 @@
 
 pythonCi(
     path: 'examples/jenkins-python',
-    runCheckov: true,
-    runDocker: true
+    runSonar: true,
+    runDocker: true,
+    runCheckov: true
 )

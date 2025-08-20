@@ -1,6 +1,5 @@
 // Define las etapas del pipeline para Python
 def call(Map config = [:]) {
-    // Configuración
     def pythonPath = config.path ?: '.'
     def runSonar = config.runSonar == false
     def runDocker = config.runDocker == false
@@ -39,9 +38,18 @@ def call(Map config = [:]) {
                         sh '''
                             # Activar entorno virtual
                             . .venv/bin/activate
-                            # Ejecutar pruebas
-                            python -m pytest
+                            # Instalar pytest-junit si no está instalado
+                            pip install pytest-junit || true
+                            # Ejecutar pruebas con generación de reporte JUnit XML
+                            python -m pytest --junitxml=test-results.xml
                         '''
+                    }
+                }
+                post {
+                    always {
+                        dir(pythonPath) {
+                            junit 'test-results.xml'
+                        }
                     }
                 }
             }
