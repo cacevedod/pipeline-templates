@@ -76,7 +76,26 @@ Sin esta credencial, el pipeline fallará al intentar ejecutar SonarQube.
 
 ## Configuración de SonarQube
 
-El pipeline busca un archivo `sonar-project.properties` en la raíz del proyecto. Si no lo encuentra, creará uno con valores predeterminados.
+El pipeline busca un archivo `sonar-project.properties` en la raíz del proyecto. Si no lo encuentra, creará uno con valores predeterminados basados en la estructura del proyecto.
+
+### Estructura recomendada del proyecto
+
+Se recomienda seguir la siguiente estructura para proyectos Python:
+
+```
+proyecto/
+├── app/             # Código fuente principal 
+│   ├── __init__.py
+│   └── main.py
+├── tests/           # Pruebas unitarias
+│   ├── __init__.py
+│   └── test_main.py
+├── requirements.txt
+├── sonar-project.properties
+└── Jenkinsfile
+```
+
+Alternativamente, también se puede usar `src/` en lugar de `app/` para el código fuente.
 
 Este repositorio incluye un archivo `sonar-project.properties` de ejemplo con las siguientes configuraciones:
 
@@ -88,10 +107,10 @@ sonar.projectVersion=1.0
 
 # Rutas donde SonarQube buscará código fuente
 sonar.sources=app
-sonar.exclusions=**/__pycache__/**,**/*.pyc,**/*.md,**/tests/**
+sonar.exclusions=**/__pycache__/**,**/*.pyc,**/*.md
 
 # Rutas para los tests y reportes
-sonar.tests=app/tests
+sonar.tests=tests
 sonar.python.coverage.reportPaths=coverage.xml
 sonar.python.xunit.reportPath=test-results.xml
 

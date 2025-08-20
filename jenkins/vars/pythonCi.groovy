@@ -36,7 +36,7 @@ def call(Map config = [:]) {
                     dir(pythonPath) {
                         sh '''
                             . .venv/bin/activate
-                            python -m pytest --junitxml=test-results.xml --cov=. --cov-report=xml
+                            python -m pytest tests/ --junitxml=test-results.xml --cov=app --cov-report=xml
                         '''
                     }
                 }
@@ -68,12 +68,38 @@ def call(Map config = [:]) {
                                             echo "sonar.projectKey=${sonarProjectKey}" >> sonar-project.properties
                                             echo "sonar.projectName=${sonarProjectName}" >> sonar-project.properties
                                             echo "sonar.projectVersion=${env.BUILD_NUMBER}" >> sonar-project.properties
-                                            echo "sonar.sources=." >> sonar-project.properties
-                                            echo "sonar.exclusions=**/__pycache__/**,**/*.pyc,**/*.md,**/tests/**" >> sonar-project.properties
+                                            
+                                            # Detectar estructura del proyecto
+                                            if [ -d "app" ] && [ -d "tests" ]; then
+                                                echo "# Estructura recomendada detectada: app/ para código fuente y tests/ para pruebas" >> sonar-project.properties
+                                                echo "sonar.sources=app" >> sonar-project.properties
+                                                echo "sonar.tests=tests" >> sonar-project.properties
+                                            elif [ -d "src" ] && [ -d "tests" ]; then
+                                                echo "# Estructura recomendada detectada: src/ para código fuente y tests/ para pruebas" >> sonar-project.properties
+                                                echo "sonar.sources=src" >> sonar-project.properties
+                                                echo "sonar.tests=tests" >> sonar-project.properties
+                                            elif [ -d "app" ] && [ ! -d "tests" ]; then
+                                                echo "# ADVERTENCIA: Se encontró la carpeta app/ pero no la carpeta tests/" >> sonar-project.properties
+                                                echo "# Se recomienda seguir la estructura: app/ para código y tests/ para pruebas" >> sonar-project.properties
+                                                echo "sonar.sources=app" >> sonar-project.properties
+                                                echo "sonar.exclusions=**/__pycache__/**,**/*.pyc,**/*.md,**/*test_*.py" >> sonar-project.properties
+                                                echo "sonar.tests=app" >> sonar-project.properties
+                                                echo "sonar.test.inclusions=**/*test_*.py" >> sonar-project.properties
+                                            else
+                                                echo "# ADVERTENCIA: No se detectó una estructura de proyecto recomendada" >> sonar-project.properties
+                                                echo "# Se recomienda seguir la estructura: app/ o src/ para código y tests/ para pruebas" >> sonar-project.properties
+                                                echo "sonar.sources=." >> sonar-project.properties
+                                                echo "sonar.exclusions=**/__pycache__/**,**/*.pyc,**/*.md,**/tests/**,**/*test_*.py" >> sonar-project.properties
+                                                echo "sonar.tests=." >> sonar-project.properties
+                                                echo "sonar.test.inclusions=**/*test_*.py" >> sonar-project.properties
+                                            fi
+                                            
+                                            echo "sonar.exclusions+=**/__pycache__/**,**/*.pyc,**/*.md" >> sonar-project.properties
                                             echo "sonar.python.coverage.reportPaths=coverage.xml" >> sonar-project.properties
                                             echo "sonar.python.xunit.reportPath=test-results.xml" >> sonar-project.properties
                                             echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
                                             echo "sonar.python.version=3" >> sonar-project.properties
+                                            echo "# Configuración generada automáticamente - edite según sea necesario" >> sonar-project.properties
                                         else
                                             echo "Usando archivo sonar-project.properties existente"
                                         fi
