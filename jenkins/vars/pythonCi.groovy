@@ -57,7 +57,7 @@ def call(Map config = [:]) {
                 steps {
                     dir(pythonPath) {
                         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                            withSonarQubeEnv(sonarQubeInstallation) {
+                            withSonarQubeEnv(installationName: sonarQubeInstallation, credentialsId: 'sonar-token') {
                                 // Usar la herramienta SonarScanner configurada en Jenkins
                                 script {
                                     def scannerHome = tool sonarScannerTool
@@ -117,11 +117,13 @@ def call(Map config = [:]) {
                     expression { runSonar }
                 }
                 steps {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                        withSonarQubeEnv(sonarQubeInstallation) {
-                            timeout(time: 5, unit: 'MINUTES') {
-                                waitForQualityGate abortPipeline: true
-                            }
+                    script {
+                        def qg = waitForQualityGate(abortPipeline: false, credentialsId: 'sonar-token')
+                        if (qg.status != 'OK') {
+                            echo "Quality Gate falló con estado: ${qg.status}"
+                            error "Quality Gate falló con estado: ${qg.status}"
+                        } else {
+                            echo "Quality Gate pasó con éxito"
                         }
                     }
                 }
