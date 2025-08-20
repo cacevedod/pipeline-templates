@@ -40,7 +40,7 @@ on:
         required: false
 
 jobs:
-  initial-steps:
+  build:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -48,22 +48,41 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Set up Node.js ${{ inputs.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
           cache: "npm"
           cache-dependency-path: "package-lock.json"
-
       - name: Install dependencies
         run: npm ci
+      - name: Upload node_modules cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-modules-${{ github.run_id }}
+          path: ${{ inputs.working-directory }}/node_modules/
+          retention-days: 1
 
+  unit-tests:
+    runs-on: ubuntu-latest
+    needs: build
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Download node_modules cache
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules-${{ github.run_id }}
+          path: ${{ inputs.working-directory }}/node_modules/
       - name: Run unit tests
         run: npm test
-
       - name: Upload Test and Coverage Reports
         uses: actions/upload-artifact@v4
         with:
@@ -75,20 +94,18 @@ jobs:
 
   sonarqube-analysis:
     runs-on: ubuntu-latest
-    needs: initial-steps
+    needs: unit-tests
     if: ${{ inputs.run-sonar == true }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Download Test and Coverage Reports
         uses: actions/download-artifact@v4
         with:
           name: test-reports
           path: ${{ inputs.working-directory }}
-
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
         with:
@@ -97,11 +114,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-  security-and-build:
+  checkov-and-docker-build:
     runs-on: ubuntu-latest
-    needs: initial-steps
-    # --- LÍNEA AÑADIDA ---
-    # Este job solo se ejecuta si se activa checkov O docker build
+    needs: unit-tests
     if: ${{ inputs.run-checkov == true || inputs.run-docker-build == true }}
     permissions:
       contents: read
@@ -116,18 +131,27 @@ jobs:
         with:
           directory: ${{ inputs.working-directory }}
 
+      - name: Build Docker image and export to disk
+        if: ${{ inputs.run-docker-build == true }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ inputs.working-directory }}
+          load: true
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+  docker-push:
+    runs-on: ubuntu-latest
+    needs: checkov-and-docker-build
+    if: ${{ inputs.run-docker-push == true }}
+    permissions:
+      packages: write
+    steps:
       - name: Login to GitHub Container Registry
-        if: ${{ inputs.run-docker-build == true || inputs.run-docker-push == true }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push Docker image
-        if: ${{ inputs.run-docker-build == true }}
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ inputs.working-directory }}
-          push: ${{ inputs.run-docker-push == true }}
-          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+      - name: Push Docker image
+        run: docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
