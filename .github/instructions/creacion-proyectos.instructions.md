@@ -117,6 +117,71 @@ proyecto-nodejs/
 └── README.md
 ```
 
+### Pasos para crear un proyecto Node.js con CI/CD moderno
+
+1. **Crea la estructura base** como se muestra arriba.
+2. **Copia los archivos base** (`.gitignore`, `Dockerfile`, `jest.config.js`, `tsconfig.json`, etc.) desde los templates de este repositorio.
+3. **Configura el pipeline de GitHub Actions**:
+
+   - Crea `.github/workflows/ci.yml` y referencia el workflow reusable:
+
+     ```yaml
+     name: Node.js CI
+
+     on:
+       push:
+         branches: [main]
+       pull_request:
+         branches: [main]
+
+     jobs:
+       build:
+         uses: <usuario>/<repo-templates>/github-actions/nodejs/ci.yml@main
+         with:
+           working-directory: .
+           node-version: 20
+           docker-image-name: ghcr.io/${{ github.repository }}:${{ github.sha }}
+         secrets: inherit
+     ```
+
+   - **No copies todo el pipeline**, solo referencia el template y ajusta los parámetros.
+
+4. **Asegúrate de tener en tu `jest.config.js`** la configuración para generar el reporte JUnit:
+
+   ```js
+   reporters: [
+     "default",
+     [
+       "jest-junit",
+       {
+         outputDirectory: process.env.JEST_JUNIT_OUTPUT_DIR || ".",
+         outputName: process.env.JEST_JUNIT_OUTPUT_NAME || "jest-junit.xml",
+       },
+     ],
+   ];
+   ```
+
+   El pipeline ya se encarga de pasar las variables de entorno para que el reporte se genere en la ruta correcta.
+
+5. **Visualización de resultados en GitHub Actions**:
+
+   - El pipeline publica los resultados de tests unitarios en la pestaña **Checks** usando dorny/test-reporter.
+   - Si usas SonarQube, tendrás un enlace directo al dashboard en el summary del job.
+
+6. **Dockerfile**: Usa `npm install` (no `--omit=dev`) para que el build funcione correctamente.
+
+7. **.gitignore**: Incluye `.venv/`, `node_modules/`, `coverage/`, `jest-junit.xml`, y archivos temporales de IDE/SO.
+
+### Buenas Prácticas
+
+- Usa TypeScript estricto.
+- Mantén el código y las pruebas separados.
+- Usa Jest con cobertura y reporte JUnit.
+- Documenta el proyecto en el README.
+- Usa el workflow reusable para CI/CD.
+- Usa Docker para builds y despliegue.
+- Si usas SonarQube, configura el archivo `sonar-project.properties`.
+
 ### Contenido Inicial de los Archivos
 
 #### 1. `src/app.ts`
