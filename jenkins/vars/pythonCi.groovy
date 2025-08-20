@@ -57,8 +57,10 @@ def call(Map config = [:]) {
                         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                             withSonarQubeEnv(sonarQubeInstallation) {
                                 // Usar la herramienta SonarScanner configurada en Jenkins
-                                def scannerHome = tool sonarScannerTool
-                                sh "${scannerHome}/bin/sonar-scanner"
+                                script {
+                                    def scannerHome = tool sonarScannerTool
+                                    sh "${scannerHome}/bin/sonar-scanner"
+                                }
                             }
                         }
                     }
