@@ -6,17 +6,19 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     uses: cacevedod/pipeline-templates/.github/workflows/nodejs-ci-template.yml@main
     with:
-      # --- Activa los pasos que quieres ejecutar ---
       run-checkov: true
-      run-docker: true
-      # Descomenta las siguientes líneas si también quieres ejecutar Sonar y publicar artefactos
-      # run-sonar: true
-      # publish-artifacts: true
+      # Construye la imagen pero no la sube (ideal para PRs)
+      run-docker-build: true
+      run-docker-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      # run-sonar: true # Descomenta para activar Sonar
     secrets:
-      # Pasa los secretos requeridos por el template
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
