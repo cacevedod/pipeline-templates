@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    uses: cacevedod/pipeline-templates/github-actions/nodejs/ci.yml@main
+    uses: cacevedod/pipeline-templates/.github/workflows/nodejs-ci-template.yml@main
     with:
       working-directory: .
       node-version: 20

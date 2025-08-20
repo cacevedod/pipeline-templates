@@ -1,25 +1,38 @@
 name: Node.js CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_call:
+    inputs:
+      working-directory:
+        required: false
+        type: string
+        default: .
+      node-version:
+        required: false
+        type: string
+        default: "20"
+      docker-image-name:
+        required: false
+        type: string
+        default: ghcr.io/${{ github.repository }}:${{ github.sha }}
+    secrets: inherit
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 20
+      - name: Use Node.js ${{ inputs.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ inputs.node-version }}
       - name: Install dependencies
         run: npm ci
       - name: Lint and Build
-        run: |
-          npm run build
+        run: npm run build
       - name: Run unit tests
         run: npm test
       - name: Upload coverage to GitHub Actions
@@ -34,7 +47,7 @@ jobs:
           path: jest-junit.xml
       - name: Build Docker image
         if: github.event_name == 'push'
-        run: docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+        run: docker build -t ${{ inputs.docker-image-name }} .
       - name: Login to GitHub Container Registry
         if: github.event_name == 'push'
         uses: docker/login-action@v3
@@ -44,4 +57,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push Docker image
         if: github.event_name == 'push'
-        run: docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+        run: docker push ${{ inputs.docker-image-name }}
