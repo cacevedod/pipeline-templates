@@ -21,6 +21,9 @@ def call(Map config = [:]) {
                             fi
                             # Activar entorno virtual
                             . .venv/bin/activate
+                            
+                            ls
+
                             # Instalar dependencias
                             python -m pip install --upgrade pip
                             pip install -r requirements.txt
