@@ -74,6 +74,36 @@ Para que el pipeline pueda ejecutar análisis con SonarQube, debes crear una cre
 
 Sin esta credencial, el pipeline fallará al intentar ejecutar SonarQube.
 
+## Configuración de SonarQube
+
+El pipeline busca un archivo `sonar-project.properties` en la raíz del proyecto. Si no lo encuentra, creará uno con valores predeterminados.
+
+Este repositorio incluye un archivo `sonar-project.properties` de ejemplo con las siguientes configuraciones:
+
+```properties
+# Información básica del proyecto
+sonar.projectKey=ejemplo-python
+sonar.projectName=Ejemplo Python Pipeline
+sonar.projectVersion=1.0
+
+# Rutas donde SonarQube buscará código fuente
+sonar.sources=app
+sonar.exclusions=**/__pycache__/**,**/*.pyc,**/*.md,**/tests/**
+
+# Rutas para los tests y reportes
+sonar.tests=app/tests
+sonar.python.coverage.reportPaths=coverage.xml
+sonar.python.xunit.reportPath=test-results.xml
+
+# Codificación de los archivos fuente
+sonar.sourceEncoding=UTF-8
+
+# Parámetros adicionales
+sonar.python.version=3
+```
+
+Puedes personalizar estos valores según las necesidades de tu proyecto.
+
 ---
 
 ## Configuración del SonarQube Scanner en Jenkins

@@ -8,6 +8,8 @@ def call(Map config = [:]) {
     def runPublishArtifact = config.runPublishArtifact ?: false
     def sonarQubeInstallation = config.sonarQubeInstallation ?: 'SonarQube'
     def sonarScannerTool = config.sonarScannerTool ?: 'SonarScanner'
+    def sonarProjectKey = config.sonarProjectKey ?: "${env.JOB_NAME.replace('/', '_')}"
+    def sonarProjectName = config.sonarProjectName ?: "${env.JOB_NAME}"
     
     pipeline {
         agent any
@@ -34,7 +36,7 @@ def call(Map config = [:]) {
                     dir(pythonPath) {
                         sh '''
                             . .venv/bin/activate
-                            python -m pytest --junitxml=test-results.xml
+                            python -m pytest --junitxml=test-results.xml --cov=. --cov-report=xml
                         '''
                     }
                 }
@@ -59,6 +61,23 @@ def call(Map config = [:]) {
                                 // Usar la herramienta SonarScanner configurada en Jenkins
                                 script {
                                     def scannerHome = tool sonarScannerTool
+                                    // Verificar si existe sonar-project.properties o crearlo
+                                    sh """
+                                        if [ ! -f "sonar-project.properties" ]; then
+                                            echo "# Creando configuración predeterminada para SonarQube" > sonar-project.properties
+                                            echo "sonar.projectKey=${sonarProjectKey}" >> sonar-project.properties
+                                            echo "sonar.projectName=${sonarProjectName}" >> sonar-project.properties
+                                            echo "sonar.projectVersion=${env.BUILD_NUMBER}" >> sonar-project.properties
+                                            echo "sonar.sources=." >> sonar-project.properties
+                                            echo "sonar.exclusions=**/__pycache__/**,**/*.pyc,**/*.md,**/tests/**" >> sonar-project.properties
+                                            echo "sonar.python.coverage.reportPaths=coverage.xml" >> sonar-project.properties
+                                            echo "sonar.python.xunit.reportPath=test-results.xml" >> sonar-project.properties
+                                            echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
+                                            echo "sonar.python.version=3" >> sonar-project.properties
+                                        else
+                                            echo "Usando archivo sonar-project.properties existente"
+                                        fi
+                                    """
                                     sh "${scannerHome}/bin/sonar-scanner"
                                 }
                             }
