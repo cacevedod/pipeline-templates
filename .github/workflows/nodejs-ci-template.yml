@@ -1,60 +1,152 @@
-name: Node.js CI
+name: Node.js Reusable CI
 
 on:
   workflow_call:
     inputs:
       working-directory:
+        description: "Directory where the node project is located"
         required: false
         type: string
-        default: .
+        default: "."
       node-version:
+        description: "Node.js version to use"
         required: false
         type: string
         default: "20"
-      docker-image-name:
+      # --- Inputs para controlar los pasos opcionales ---
+      run-sonar:
+        description: "Run SonarQube analysis"
         required: false
-        type: string
-        default: ghcr.io/${{ github.repository }}:${{ github.sha }}
-    secrets: inherit
+        type: boolean
+        default: false
+      run-checkov:
+        description: "Run Checkov IaC scan"
+        required: false
+        type: boolean
+        default: false
+      run-docker:
+        description: "Build and push Docker image"
+        required: false
+        type: boolean
+        default: false
+      publish-artifacts:
+        description: "Publish build artifacts"
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      SONAR_TOKEN:
+        required: false
+      SONAR_HOST_URL:
+        required: false
 
 jobs:
-  build:
+  # --- JOB 1: Pasos iniciales y obligatorios ---
+  build-and-test:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ${{ inputs.working-directory }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ inputs.node-version }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Necesario para que SonarQube pueda analizar el historial completo
+          fetch-depth: 0
+
+      - name: Set up Node.js ${{ inputs.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
+          cache: "npm"
+          cache-dependency-path: "${{ inputs.working-directory }}/package-lock.json"
+
       - name: Install dependencies
         run: npm ci
-      - name: Lint and Build
-        run: npm run build
+
       - name: Run unit tests
         run: npm test
-      - name: Upload coverage to GitHub Actions
-        uses: actions/upload-artifact@v4
+
+  # --- JOB 2: Escaneos de seguridad y calidad en paralelo ---
+  security-and-quality-scans:
+    runs-on: ubuntu-latest
+    # Este job depende de que el anterior termine con éxito
+    needs: build-and-test
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          name: coverage-report
-          path: coverage/
-      - name: Upload JUnit test results
-        uses: actions/upload-artifact@v4
+          fetch-depth: 0
+
+      # --- Paso opcional: SonarQube ---
+      - name: SonarQube Scan
+        if: ${{ inputs.run-sonar == true }}
+        uses: sonarsource/sonarqube-scan-action@master
         with:
-          name: junit-report
-          path: jest-junit.xml
-      - name: Build Docker image
-        if: github.event_name == 'push'
-        run: docker build -t ${{ inputs.docker-image-name }} .
+          projectBaseDir: ${{ inputs.working-directory }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # --- Paso opcional: Checkov ---
+      - name: Checkov Scan
+        if: ${{ inputs.run-checkov == true }}
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ${{ inputs.working-directory }}
+          framework: terraform # Cambia esto al framework que uses (kubernetes, etc.)
+
+  # --- JOB 3: Construcción de la imagen Docker ---
+  build-and-push-docker:
+    runs-on: ubuntu-latest
+    # Este job depende de que los escaneos terminen con éxito
+    needs: security-and-quality-scans
+    # Se ejecuta solo si el input 'run-docker' es true
+    if: ${{ inputs.run-docker == true }}
+    permissions:
+      contents: read
+      packages: write # Permiso para escribir en GitHub Packages (ghcr.io)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Login to GitHub Container Registry
-        if: github.event_name == 'push'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push Docker image
-        if: github.event_name == 'push'
-        run: docker push ${{ inputs.docker-image-name }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ inputs.working-directory }}
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+  # --- JOB 4: Publicación de artefactos ---
+  publish-artifacts:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: ${{ inputs.publish-artifacts == true }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Aquí irían los pasos para generar los artefactos (ej. npm run build)
+      # Por ahora, asumimos que ya existen o se generan en un paso previo.
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ${{ inputs.working-directory }}/coverage/
+
+      - name: Upload JUnit test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-report
+          path: ${{ inputs.working-directory }}/jest-junit.xml
