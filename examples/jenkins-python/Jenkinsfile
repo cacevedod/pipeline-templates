@@ -1,21 +1,5 @@
 @Library('pipeline-templates@main') _
 
-pipeline {
-    agent any
-    stages {
-        stage('CI para Python') {
-            steps {
-                script {
-                    // Carga y ejecuta todas las etapas definidas en el template
-                    def pythonPipeline = pythonCi(
-                        pythonVersion: '3.11',
-                        path: 'app'
-                    )
-                    
-                    // Ejecutar el pipeline definido
-                    pythonPipeline()
-                }
-            }
-        }
-    }
-}
+pythonCi(
+    path: 'app'
+)
