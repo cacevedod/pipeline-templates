@@ -19,12 +19,7 @@ def call(Map config = [:]) {
                             if [ ! -d ".venv" ]; then
                                 python3 -m venv .venv
                             fi
-                            # Activar entorno virtual
                             . .venv/bin/activate
-                            
-                            ls
-
-                            # Instalar dependencias
                             python -m pip install --upgrade pip
                             pip install -r requirements.txt
                         '''
@@ -36,11 +31,7 @@ def call(Map config = [:]) {
                 steps {
                     dir(pythonPath) {
                         sh '''
-                            # Activar entorno virtual
                             . .venv/bin/activate
-                            # Instalar pytest-junit si no está instalado
-                            pip install pytest-junit || true
-                            # Ejecutar pruebas con generación de reporte JUnit XML
                             python -m pytest --junitxml=test-results.xml
                         '''
                     }
@@ -99,9 +90,7 @@ def call(Map config = [:]) {
                 steps {
                     dir(pythonPath) {
                         sh '''
-                            # Activar entorno virtual
                             . .venv/bin/activate
-                            # Instalar y ejecutar Checkov
                             pip install checkov
                             python -m checkov -d .
                         '''

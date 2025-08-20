@@ -6,4 +6,3 @@ pytest-cov  # Para análisis de cobertura de código
 requests  # Cliente HTTP alternativo
 python-multipart  # Para manejo de formularios
 pydantic>=2.0.0  # Para validación de datos
-pytest-junit  # Para generar informes JUnit XML
