@@ -7,3 +7,4 @@ sonar:latest
 configuration-as-code:latest
 credentials:latest
 plain-credentials:latest
+blueocean:latest

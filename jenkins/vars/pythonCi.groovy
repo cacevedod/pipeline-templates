@@ -1,11 +1,11 @@
 // Define las etapas del pipeline para Python
 def call(Map config = [:]) {
     def pythonPath = config.path ?: '.'
-    def runSonar = config.runSonar == false
-    def runDocker = config.runDocker == false
-    def runDockerPush = config.runDockerPush == false
-    def runCheckov = config.runCheckov == false
-    def runPublishArtifact = config.runPublishArtifact == false
+    def runSonar = config.runSonar ?: false
+    def runDocker = config.runDocker ?: false
+    def runDockerPush = config.runDockerPush ?: false
+    def runCheckov = config.runCheckov ?: false
+    def runPublishArtifact = config.runPublishArtifact ?: false
     
     pipeline {
         agent any
