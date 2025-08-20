@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 jobs:
-  build:
+  template:
     uses: cacevedod/pipeline-templates/.github/workflows/nodejs-ci-template.yml@main
     with:
       run-checkov: true

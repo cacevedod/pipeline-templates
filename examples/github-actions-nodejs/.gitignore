@@ -10,6 +10,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Reportes de pruebas
+junit.xml
+jest-junit.xml
+
 # Coverage
 coverage/
 

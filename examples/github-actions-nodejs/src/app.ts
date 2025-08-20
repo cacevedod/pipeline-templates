@@ -15,8 +15,11 @@ const start = async () => {
   }
 };
 
+
 if (require.main === module) {
   start();
 }
+
+export { start };
 
 export default app;
