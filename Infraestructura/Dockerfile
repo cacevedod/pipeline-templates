@@ -7,6 +7,8 @@ RUN apt-get update \
     && apt-get install -y python3 python3-pip
 # && rm -rf /var/lib/apt/lists/* # Activar si se quiere que no se instale nada por fuera del Dockerfile
 
+RUN python3 -m pip install checkov
+
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli -f /usr/share/jenkins/ref/plugins.txt
 
