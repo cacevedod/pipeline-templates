@@ -1,5 +1,7 @@
 @Library('pipeline-templates@main') _
 
 pythonCi(
-    path: 'examples/jenkins-python'
+    path: 'examples/jenkins-python',
+    runCheckov: true,
+    runDocker: true
 )

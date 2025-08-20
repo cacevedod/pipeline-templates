@@ -4,6 +4,7 @@ def call(Map config = [:]) {
     def pythonPath = config.path ?: '.'
     def runSonar = config.runSonar == false
     def runDocker = config.runDocker == false
+    def runDockerPush = config.runDockerPush == false
     def runCheckov = config.runCheckov == false
     def runPublishArtifact = config.runPublishArtifact == false
     
@@ -100,18 +101,34 @@ def call(Map config = [:]) {
                 }
             }
             
-            stage('Docker Build & Push') {
+            stage('Docker Build') {
                 when {
                     expression { runDocker }
                 }
                 steps {
                     dir(pythonPath) {
+                        script {
+                            def imageName = "${env.JOB_NAME}:${env.BUILD_NUMBER}"
+                            env.DOCKER_IMAGE_NAME = imageName
+                            docker.build(imageName)
+                        }
+                    }
+                }
+            }
+            
+            stage('Docker Push') {
+                when {
+                    expression { runDocker && runDockerPush }
+                }
+                steps {
+                    dir(pythonPath) {
                         withCredentials([usernamePassword(credentialsId: 'docker-registry', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                             script {
-                                def imageName = "${DOCKER_USERNAME}/${env.JOB_NAME}:${env.BUILD_NUMBER}"
-                                def dockerImage = docker.build(imageName)
+                                def imageName = env.DOCKER_IMAGE_NAME
+                                def registryImage = "${DOCKER_USERNAME}/${imageName}"
+                                sh "docker tag ${imageName} ${registryImage}"
                                 docker.withRegistry('', 'docker-registry') {
-                                    dockerImage.push()
+                                    docker.image(registryImage).push()
                                 }
                             }
                         }
