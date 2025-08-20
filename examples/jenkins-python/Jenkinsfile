@@ -3,6 +3,7 @@
 pythonCi(
     path: 'examples/jenkins-python',
     runSonar: true,
+    sonarQubeInstallation: 'SonarQube',
     runDocker: true,
     runCheckov: true
 )

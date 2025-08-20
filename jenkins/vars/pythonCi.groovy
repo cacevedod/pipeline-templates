@@ -6,6 +6,8 @@ def call(Map config = [:]) {
     def runDockerPush = config.runDockerPush ?: false
     def runCheckov = config.runCheckov ?: false
     def runPublishArtifact = config.runPublishArtifact ?: false
+    def sonarQubeInstallation = config.sonarQubeInstallation ?: 'SonarQube'
+    def sonarScannerTool = config.sonarScannerTool ?: 'SonarScanner'
     
     pipeline {
         agent any
@@ -53,8 +55,10 @@ def call(Map config = [:]) {
                 steps {
                     dir(pythonPath) {
                         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                            withSonarQubeEnv('SonarQubeServer') {
-                                sh 'sonar-scanner'
+                            withSonarQubeEnv(sonarQubeInstallation) {
+                                // Usar la herramienta SonarScanner configurada en Jenkins
+                                def scannerHome = tool sonarScannerTool
+                                sh "${scannerHome}/bin/sonar-scanner"
                             }
                         }
                     }
