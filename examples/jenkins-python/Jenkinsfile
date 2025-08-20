@@ -1,21 +1,19 @@
 @Library('pipeline-templates@main') _
 
 pipeline {
-    agent {
-        docker {
-            image 'python:3.11-slim'
-            args '-u root:root'
-        }
-    }
+    agent any
     stages {
-        stage('CI para Proyecto Python') {
+        stage('CI para Python') {
             steps {
                 script {
-                    pythonCi(
+                    // Carga y ejecuta todas las etapas definidas en el template
+                    def pythonPipeline = pythonCi(
                         pythonVersion: '3.11',
-                        path: 'app',
-                        runSonar: true
+                        path: 'app'
                     )
+                    
+                    // Ejecutar el pipeline definido
+                    pythonPipeline()
                 }
             }
         }

@@ -1,54 +1,88 @@
+// Define las etapas del pipeline para Python
 def call(Map config = [:]) {
-    // Valores por defecto para features opcionales
-    def runSonar = config.runSonar == true
-    def runDocker = config.runDocker == true
-    def runCheckov = config.runCheckov == true
-    def runPublishArtifact = config.runPublishArtifact == true
-    def runTests = config.runTests != false
+    // Configuración
     def pythonPath = config.path ?: '.'
-    dir(pythonPath) {
-        stage('Install dependencies') {
-            sh 'python -m pip install --upgrade pip'
-            sh 'pip install -r requirements.txt'
-        }
-        if (runTests) {
-            stage('Unit Test') {
-                sh 'pytest'
+    def runSonar = config.runSonar == false
+    def runDocker = config.runDocker == false
+    def runCheckov = config.runCheckov == false
+    def runPublishArtifact = config.runPublishArtifact == false
+    
+    // Retorna un closure que define todas las etapas
+    return {
+        // ETAPAS OBLIGATORIAS - Siempre se ejecutan
+        stage('Instalación de dependencias') {
+            steps {
+                dir(pythonPath) {
+                    sh 'python3 -m pip install --upgrade pip'
+                    sh 'python3 -m pip install -r requirements.txt'
+                }
             }
         }
+        
+        stage('Pruebas unitarias') {
+            steps {
+                dir(pythonPath) {
+                    sh 'python3 -m pytest'
+                }
+            }
+        }
+        
+        // ETAPAS OPCIONALES - Se ejecutan según configuración
         if (runSonar) {
-            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                stage('SonarQube Analysis') {
-                    withSonarQubeEnv('SonarQubeServer') {
-                        sh 'sonar-scanner'
+            stage('Análisis con SonarQube') {
+                steps {
+                    dir(pythonPath) {
+                        withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                            withSonarQubeEnv('SonarQubeServer') {
+                                sh 'sonar-scanner'
+                            }
+                        }
                     }
                 }
-                stage('Quality Gate') {
+            }
+            
+            stage('Quality Gate') {
+                steps {
                     timeout(time: 5, unit: 'MINUTES') {
                         waitForQualityGate abortPipeline: true
                     }
                 }
             }
         }
+        
         if (runCheckov) {
-            stage('Checkov') {
-                sh 'pip install checkov'
-                sh 'checkov -d .'
+            stage('Análisis con Checkov') {
+                steps {
+                    dir(pythonPath) {
+                        sh 'python3 -m pip install checkov'
+                        sh 'python3 -m checkov -d .'
+                    }
+                }
             }
         }
+        
         if (runPublishArtifact) {
-            stage('Publish Artifact') {
-                archiveArtifacts artifacts: 'dist/*.whl', fingerprint: true
+            stage('Publicación de artefactos') {
+                steps {
+                    dir(pythonPath) {
+                        archiveArtifacts artifacts: 'dist/*.whl', fingerprint: true
+                    }
+                }
             }
         }
+        
         if (runDocker) {
-            withCredentials([usernamePassword(credentialsId: 'docker-registry', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                stage('Build & Push Docker Image') {
-                    script {
-                        def imageName = "${DOCKER_USERNAME}/${env.JOB_NAME}:${env.BUILD_NUMBER}"
-                        def dockerImage = docker.build(imageName)
-                        docker.withRegistry('', 'docker-registry') {
-                            dockerImage.push()
+            stage('Docker Build & Push') {
+                steps {
+                    dir(pythonPath) {
+                        withCredentials([usernamePassword(credentialsId: 'docker-registry', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                            script {
+                                def imageName = "${DOCKER_USERNAME}/${env.JOB_NAME}:${env.BUILD_NUMBER}"
+                                def dockerImage = docker.build(imageName)
+                                docker.withRegistry('', 'docker-registry') {
+                                    dockerImage.push()
+                                }
+                            }
                         }
                     }
                 }
