@@ -1,4 +1,4 @@
-name: Node.js CI
+name: CI
 
 on:
   push:
@@ -15,7 +15,6 @@ jobs:
     uses: cacevedod/pipeline-templates/.github/workflows/nodejs-ci-template.yml@main
     with:
       run-checkov: true
-      # Construye la imagen pero no la sube (ideal para PRs)
       run-docker-build: true
       run-docker-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       # run-sonar: true # Descomenta para activar Sonar
