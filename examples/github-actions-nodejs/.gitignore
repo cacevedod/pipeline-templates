@@ -1,0 +1,34 @@
+# Node
+node_modules/
+dist/
+build/
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage
+coverage/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Docker
+*.local.yml
+docker-compose.override.yml
+
+# Jest
+jest-junit.xml
+
+# Otros
+*.tgz

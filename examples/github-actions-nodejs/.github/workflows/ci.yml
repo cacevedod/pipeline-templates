@@ -1,0 +1,16 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    uses: cacevedod/pipeline-templates/github-actions/nodejs/ci.yml@main
+    with:
+      working-directory: .
+      node-version: 20
+      docker-image-name: ghcr.io/${{ github.repository }}:${{ github.sha }}
+    secrets: inherit
