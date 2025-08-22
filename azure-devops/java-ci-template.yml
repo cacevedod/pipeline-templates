@@ -86,7 +86,7 @@ jobs:
         displayName: "Run SonarCloud Analysis"
         workingDirectory: ${{ parameters.workingDirectory }}
 
-      - task: SonarCloudPublish@1
+      - task: SonarCloudPublish@2
         displayName: "Publish Quality Gate Result"
         inputs:
           pollingTimeoutSec: "300"

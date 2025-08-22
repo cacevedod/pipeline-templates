@@ -1,10 +1,12 @@
 # Gradle
 .gradle/
 build/
+# Excepción para incluir el Gradle Wrapper JAR
+!gradle/wrapper/gradle-wrapper.jar
 
 # Java
 *.class
-*.jar
+ *.jar
 *.war
 *.ear
 
