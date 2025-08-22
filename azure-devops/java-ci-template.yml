@@ -26,32 +26,27 @@ jobs:
     steps:
       - checkout: self
         displayName: "Checkout Repository"
-
       - task: JavaToolInstaller@0
         displayName: "Set up JDK ${{ parameters.javaVersion }}"
         inputs:
           versionSpec: ${{ parameters.javaVersion }}
           jdkArchitectureOption: "x64"
           jdkSourceOption: "PreInstalled"
-
       - script: |
           chmod +x gradlew
           ./gradlew build test jacocoTestReport
         displayName: "Build & Run Unit Tests with Gradle"
         workingDirectory: ${{ parameters.workingDirectory }}
-
       - task: PublishTestResults@2
         displayName: "Publish Test Results"
         inputs:
           testResultsFormat: "JUnit"
           testResultsFiles: "**/build/test-results/test/TEST-*.xml"
-
       - task: PublishCodeCoverageResults@2
         displayName: "Publish Code Coverage"
         inputs:
           codeCoverageTool: "JaCoCo"
           summaryFileLocation: "**/build/reports/jacoco/test/jacocoTestReport.xml"
-
       - task: PublishPipelineArtifact@1
         displayName: "Publish JAR Artifact"
         inputs:
@@ -59,7 +54,7 @@ jobs:
           artifact: "drop"
 
   - job: SonarQubeAnalysis
-    displayName: "SonarQube Analysis"
+    displayName: "SonarCloud Analysis"
     dependsOn: BuildAndTest
     condition: and(succeeded(), eq('${{ parameters.runSonar }}', 'true'))
     pool:
@@ -67,26 +62,23 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
-
       - task: JavaToolInstaller@0
         displayName: "Set up JDK ${{ parameters.javaVersion }}"
         inputs:
           versionSpec: ${{ parameters.javaVersion }}
           jdkArchitectureOption: "x64"
           jdkSourceOption: "PreInstalled"
-
       - task: SonarCloudPrepare@1
         displayName: "Prepare SonarCloud Analysis"
         inputs:
           SonarCloud: "SonarQubeServer"
           organization: "cacevedod"
           scannerMode: "Gradle"
-
       - script: "./gradlew sonarqube"
         displayName: "Run SonarCloud Analysis"
         workingDirectory: ${{ parameters.workingDirectory }}
 
-      - task: SonarCloudPublish@2
+      - task: SonarCloudPublish@1
         displayName: "Publish Quality Gate Result"
         inputs:
           pollingTimeoutSec: "300"
@@ -105,6 +97,12 @@ jobs:
         inputs:
           artifact: "drop"
           path: "$(System.DefaultWorkingDirectory)"
+
+      - script: |
+          pip install checkov
+          checkov -d ${{ parameters.workingDirectory }}
+        displayName: "Run Checkov Scan"
+        condition: eq('${{ parameters.runCheckov }}', 'true')
 
       - task: Docker@2
         displayName: "Build Docker Image"
