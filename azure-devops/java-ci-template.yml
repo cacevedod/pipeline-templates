@@ -36,7 +36,7 @@ jobs:
 
       - script: |
           chmod +x gradlew
-          ./gradlew build
+          ./gradlew build test jacocoTestReport
         displayName: "Build & Run Unit Tests with Gradle"
         workingDirectory: ${{ parameters.workingDirectory }}
 
@@ -99,6 +99,12 @@ jobs:
       vmImage: "ubuntu-latest"
     steps:
       - checkout: self
+
+      - task: DownloadPipelineArtifact@2
+        displayName: "Download JAR Artifact"
+        inputs:
+          artifact: "drop"
+          path: "$(System.DefaultWorkingDirectory)"
 
       - task: Docker@2
         displayName: "Build Docker Image"
