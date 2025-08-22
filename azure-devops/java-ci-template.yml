@@ -80,9 +80,7 @@ jobs:
         inputs:
           SonarQube: "SonarQubeServer" # Tu conexión de tipo SonarCloud
           scannerMode: "CLI"
-          configMode: "manual"
-          cliProjectKey: "$(Build.Repository.Name)" # Variable de Azure para el nombre del repo
-          cliSources: "."
+          configMode: "file"
 
       - script: "./gradlew build sonarqube"
         displayName: "Build & Run SonarCloud Analysis"
