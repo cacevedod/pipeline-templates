@@ -62,6 +62,13 @@ jobs:
     steps:
       - checkout: self
         fetchDepth: 0
+
+      - task: DownloadPipelineArtifact@2
+        displayName: "Download Build Artifacts"
+        inputs:
+          artifact: "drop"
+          path: "$(System.DefaultWorkingDirectory)"
+
       - task: JavaToolInstaller@0
         displayName: "Set up JDK ${{ parameters.javaVersion }}"
         inputs:
