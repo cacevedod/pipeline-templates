@@ -75,18 +75,18 @@ jobs:
           jdkArchitectureOption: "x64"
           jdkSourceOption: "PreInstalled"
 
-      - task: SonarQubePrepare@5
+      - task: SonarCloudPrepare@1
         displayName: "Prepare SonarCloud Analysis"
         inputs:
-          SonarQube: "SonarQubeServer"
-          scannerMode: "CLI"
-          configMode: "file"
+          SonarCloud: "SonarQubeServer"
+          organization: "cacevedod"
+          scannerMode: "Gradle"
 
-      - script: "./gradlew build sonarqube"
-        displayName: "Build & Run SonarCloud Analysis"
+      - script: "./gradlew sonarqube"
+        displayName: "Run SonarCloud Analysis"
         workingDirectory: ${{ parameters.workingDirectory }}
 
-      - task: SonarQubePublish@5
+      - task: SonarCloudPublish@1
         displayName: "Publish Quality Gate Result"
         inputs:
           pollingTimeoutSec: "300"
