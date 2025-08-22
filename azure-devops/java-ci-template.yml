@@ -46,7 +46,7 @@ jobs:
           testResultsFormat: "JUnit"
           testResultsFiles: "**/build/test-results/test/TEST-*.xml"
 
-      - task: PublishCodeCoverageResults@1
+      - task: PublishCodeCoverageResults@2
         displayName: "Publish Code Coverage"
         inputs:
           codeCoverageTool: "JaCoCo"
