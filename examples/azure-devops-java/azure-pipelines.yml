@@ -21,3 +21,5 @@ jobs:
       runSonar: false
       runDockerBuild: true
       runDockerPush: ${{ and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}
+      registryOwner: "cacevedod"
+      artifactName: "azure-devops-java"

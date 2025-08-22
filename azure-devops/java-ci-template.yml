@@ -17,6 +17,12 @@ parameters:
   - name: runDockerPush
     type: boolean
     default: false
+  - name: registryOwner
+    type: string
+    description: "Owner of the container registry (e.g., GitHub username)"
+  - name: artifactName
+    type: string
+    description: "Name of the artifact/image to be built"
 
 jobs:
   - job: BuildAndTest
@@ -113,8 +119,10 @@ jobs:
           artifact: "drop"
           path: "$(System.DefaultWorkingDirectory)"
       - script: |
-          image_name=$(echo "$(Build.Repository.Name)" | tr '[:upper:]' '[:lower:]')
-          echo "##vso[task.setvariable variable=imageName;]$image_name"
+          IMAGE_NAME="ghcr.io/${{ parameters.registryOwner }}/${{ parameters.artifactName }}"
+          LOWERCASE_IMAGE_NAME=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
+
+          echo "##vso[task.setvariable variable=FullImageName]$LOWERCASE_IMAGE_NAME"
         displayName: "Set Docker Image Name"
 
       - script: |
@@ -128,15 +136,21 @@ jobs:
         condition: eq('${{ parameters.runDockerBuild }}', 'true')
         inputs:
           command: "build"
-          repository: "$(imageName)"
+          repository: "$(FullImageName)"
           dockerfile: "${{ parameters.workingDirectory }}/Dockerfile"
-          tags: "$(Build.SourceVersion)"
+          tags: |
+            $(Build.SourceVersion)
+            ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+              latest
 
       - task: Docker@2
         displayName: "Push Docker Image"
         condition: and(succeeded(), eq('${{ parameters.runDockerBuild }}', 'true'), eq('${{ parameters.runDockerPush }}', 'true'))
         inputs:
           command: "push"
-          repository: "$(imageName)"
+          repository: "$(FullImageName)"
           containerRegistry: "DockerRegistry"
-          tags: "$(Build.SourceVersion)"
+          tags: |
+            $(Build.SourceVersion)
+            ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+              latest
