@@ -573,3 +573,54 @@ npm run dev
 6. **CI/CD**: Utiliza el pipeline de Jenkins para integración continua.
 7. **Análisis de Código**: Configura SonarQube para mejorar la calidad.
 8. **Contenedorización**: Usa Docker para estandarizar entornos de ejecución.
+
+### Archivo sonar-project.properties
+
+Para proyectos que requieran análisis de calidad con SonarQube, debes agregar un archivo `sonar-project.properties` en la raíz del proyecto. Este archivo debe estar adaptado al lenguaje y estructura del proyecto.
+
+#### Ejemplo para Java (Gradle):
+
+```properties
+# Información básica del proyecto
+sonar.projectKey=nombre-del-proyecto
+sonar.projectName=Nombre del Proyecto
+sonar.projectVersion=1.0
+
+# Rutas donde SonarQube buscará código fuente
+sonar.sources=src/main/java
+sonar.exclusions=**/test/**,**/*.md
+
+# Rutas para los tests y reportes
+sonar.tests=src/test/java
+sonar.java.binaries=build/classes
+sonar.java.coveragePlugin=jacoco
+sonar.jacoco.reportPaths=build/reports/jacoco/test/jacocoTestReport.xml
+
+# Codificación de los archivos fuente
+sonar.sourceEncoding=UTF-8
+
+# Parámetros adicionales
+sonar.java.source=17
+```
+
+#### Ejemplo para Node.js:
+
+```properties
+# Información básica del proyecto
+sonar.projectKey=nombre-del-proyecto
+sonar.projectName=Nombre del Proyecto
+sonar.projectVersion=1.0
+
+# Rutas donde SonarQube buscará código fuente
+sonar.sources=src
+sonar.exclusions=**/tests/**,**/*.md
+
+# Rutas para los tests y reportes
+sonar.tests=tests
+sonar.javascript.lcov.reportPaths=coverage/lcov.info
+
+# Codificación de los archivos fuente
+sonar.sourceEncoding=UTF-8
+```
+
+Incluye y ajusta este archivo en cada nuevo proyecto para asegurar el análisis de calidad en el pipeline.

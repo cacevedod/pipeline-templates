@@ -34,22 +34,26 @@ extends:
     runDockerPush: false
 ```
 
-## Service Connections requeridos
+## Requisitos previos para ejecutar el pipeline
 
-Para ejecutar el pipeline completo, debes crear los siguientes Service Connections en Azure DevOps:
+1. **Crear el Service Connection de SonarQube y el template (GitHub)**
+   - Ve a la sección de Service Connections en tu proyecto de Azure DevOps.
+   - Crea una conexión de tipo SonarQube llamada `SonarQubeServer`.
+   - Crea una conexión de tipo Docker Registry si vas a publicar imágenes.
+   - ![Service Connection SonarQube](img/sonar-server.png)
+   - ![Service Connection Template](img/sonar-scanner.png)
 
-- **SonarQube**  
-  Tipo: SonarQube  
-  Nombre: `SonarQubeServer`  
-  Permite análisis de calidad de código.
+2. **Crear el Service Connection de DockerHub (Registry)**
+   - Ve a la sección de Service Connections y crea una conexión de tipo Docker Registry.
+   - Selecciona DockerHub como proveedor y configura las credenciales de tu cuenta.
+   - ![Service Connection DockerHub](img/dockerhub-connection.png)
 
-- **Docker Registry**  
-  Tipo: Docker Registry  
-  Nombre: `GitHubContainerRegistry` (o el que uses en el pipeline)  
-  Permite publicar imágenes Docker.
+3. **Tener instalado SonarQube en el proyecto de Azure DevOps**
+   - Instala la extensión de SonarQube desde el marketplace de Azure DevOps.
+   - ![Instalar extensión SonarQube](img/sonar-webhook.png)
 
-- **(Opcional) Azure Resource Manager**  
-  Para despliegues automáticos a Azure.
+4. **(Opcional) Azure Resource Manager**
+   - Para despliegues automáticos a Azure.
 
 ## Jobs principales del pipeline
 

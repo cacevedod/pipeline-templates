@@ -1,6 +1,7 @@
+# azure-pipelines.yml
+
 trigger:
   - main
-
 pr:
   - main
 
@@ -10,13 +11,13 @@ pool:
 resources:
   repositories:
     - repository: templates
-      type: git
-      name: TuProyecto/pipeline-templates
+      type: github
+      name: cacevedod/pipeline-templates
+      endpoint: github.com_cacevedod
 
 jobs:
-  - template: templates/java-ci-template.yml@main # Ruta al template en el otro repo
+  - template: azure-devops/java-ci-template.yml@templates
     parameters:
       runSonar: false
-      runCheckov: false
       runDockerBuild: true
-      runDockerPush: false
+      runDockerPush: ${{ and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}

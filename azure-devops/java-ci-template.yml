@@ -76,14 +76,16 @@ jobs:
           jdkSourceOption: "PreInstalled"
 
       - task: SonarQubePrepare@5
-        displayName: "Prepare SonarQube Analysis"
+        displayName: "Prepare SonarCloud Analysis"
         inputs:
-          SonarQube: "SonarQubeServer"
-          scannerMode: "Gradle"
-          gradleBuildFile: "${{ parameters.workingDirectory }}/build.gradle"
+          SonarQube: "SonarQubeServer" # Tu conexión de tipo SonarCloud
+          scannerMode: "CLI"
+          configMode: "manual"
+          cliProjectKey: "$(Build.Repository.Name)" # Variable de Azure para el nombre del repo
+          cliSources: "."
 
-      - script: "./gradlew sonarqube"
-        displayName: "Run SonarQube Analysis"
+      - script: "./gradlew build sonarqube"
+        displayName: "Build & Run SonarCloud Analysis"
         workingDirectory: ${{ parameters.workingDirectory }}
 
       - task: SonarQubePublish@5
@@ -115,5 +117,5 @@ jobs:
         inputs:
           command: "push"
           repository: "$(Build.Repository.Name)"
-          containerRegistry: "GitHubContainerRegistry"
+          containerRegistry: "DockerRegistry"
           tags: "$(Build.SourceVersion)"
