@@ -115,7 +115,7 @@ jobs:
 
       - task: Docker@2
         displayName: "Push Docker Image"
-        condition: eq('${{ parameters.runDockerPush }}', 'true')
+        condition: and(succeeded(), eq('${{ parameters.runDockerBuild }}', 'true'), eq('${{ parameters.runDockerPush }}', 'true'))
         inputs:
           command: "push"
           repository: "$(Build.Repository.Name)"
