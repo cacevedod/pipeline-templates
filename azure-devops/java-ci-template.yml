@@ -52,6 +52,11 @@ jobs:
         inputs:
           targetPath: "${{ parameters.workingDirectory }}/build/libs"
           artifact: "drop"
+      - task: PublishPipelineArtifact@1
+        displayName: "Publish Build Output for Scans"
+        inputs:
+          targetPath: "${{ parameters.workingDirectory }}/build"
+          artifact: "build_output"
 
   - job: SonarQubeAnalysis
     displayName: "SonarCloud Analysis"
@@ -64,9 +69,9 @@ jobs:
         fetchDepth: 0
 
       - task: DownloadPipelineArtifact@2
-        displayName: "Download Build Artifacts"
+        displayName: "Download Build Output"
         inputs:
-          artifact: "drop"
+          artifact: "build_output"
           path: "$(System.DefaultWorkingDirectory)"
 
       - task: JavaToolInstaller@0
@@ -120,7 +125,7 @@ jobs:
         condition: eq('${{ parameters.runDockerBuild }}', 'true')
         inputs:
           command: "build"
-          repository: "$(Build.Repository.Name)"
+          repository: "ghcr.io/$(Build.Repository.Name)"
           dockerfile: "${{ parameters.workingDirectory }}/Dockerfile"
           tags: "$(Build.SourceVersion)"
 
@@ -129,6 +134,6 @@ jobs:
         condition: and(succeeded(), eq('${{ parameters.runDockerBuild }}', 'true'), eq('${{ parameters.runDockerPush }}', 'true'))
         inputs:
           command: "push"
-          repository: "$(Build.Repository.Name)"
+          repository: "ghcr.io/$(Build.Repository.Name)"
           containerRegistry: "DockerRegistry"
           tags: "$(Build.SourceVersion)"
