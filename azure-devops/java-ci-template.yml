@@ -72,7 +72,11 @@ jobs:
         displayName: "Download Build Output"
         inputs:
           artifact: "build_output"
-          path: "$(System.DefaultWorkingDirectory)"
+          path: "$(System.DefaultWorkingDirectory)/build"
+      - script: |
+          echo "Verificando el contenido del directorio de trabajo:"
+          ls -lR
+        displayName: "Verify Downloaded Artifacts"
 
       - task: JavaToolInstaller@0
         displayName: "Set up JDK ${{ parameters.javaVersion }}"
@@ -86,7 +90,7 @@ jobs:
           SonarCloud: "SonarQubeServer"
           organization: "cacevedod"
           scannerMode: "Other"
-      - script: "./gradlew sonarqube -Dsonar.scanner.mode=Gradle"
+      - script: "./gradlew sonar -Dsonar.scanner.mode=Gradle"
         displayName: "Run SonarCloud Analysis"
         workingDirectory: ${{ parameters.workingDirectory }}
       - task: SonarCloudPublish@1
@@ -108,11 +112,10 @@ jobs:
         inputs:
           artifact: "drop"
           path: "$(System.DefaultWorkingDirectory)"
-
       - script: |
-          echo "Verificando el contenido del directorio de trabajo:"
-          ls -lR
-        displayName: "Verify Downloaded Artifacts"
+          image_name=$(echo "$(Build.Repository.Name)" | tr '[:upper:]' '[:lower:]')
+          echo "##vso[task.setvariable variable=imageName;]$image_name"
+        displayName: "Set Docker Image Name"
 
       - script: |
           pip install checkov
@@ -125,7 +128,7 @@ jobs:
         condition: eq('${{ parameters.runDockerBuild }}', 'true')
         inputs:
           command: "build"
-          repository: "ghcr.io/$(Build.Repository.Name)"
+          repository: "$(imageName)"
           dockerfile: "${{ parameters.workingDirectory }}/Dockerfile"
           tags: "$(Build.SourceVersion)"
 
@@ -134,6 +137,6 @@ jobs:
         condition: and(succeeded(), eq('${{ parameters.runDockerBuild }}', 'true'), eq('${{ parameters.runDockerPush }}', 'true'))
         inputs:
           command: "push"
-          repository: "ghcr.io/$(Build.Repository.Name)"
+          repository: "$(imageName)"
           containerRegistry: "DockerRegistry"
           tags: "$(Build.SourceVersion)"
