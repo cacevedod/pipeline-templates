@@ -119,7 +119,7 @@ jobs:
           artifact: "drop"
           path: "$(System.DefaultWorkingDirectory)"
       - script: |
-          IMAGE_NAME="ghcr.io/${{ parameters.registryOwner }}/${{ parameters.artifactName }}"
+          IMAGE_NAME="${{ parameters.registryOwner }}/${{ parameters.artifactName }}"
           LOWERCASE_IMAGE_NAME=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
 
           echo "##vso[task.setvariable variable=FullImageName]$LOWERCASE_IMAGE_NAME"
