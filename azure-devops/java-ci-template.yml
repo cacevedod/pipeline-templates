@@ -78,7 +78,7 @@ jobs:
       - task: SonarQubePrepare@5
         displayName: "Prepare SonarCloud Analysis"
         inputs:
-          SonarQube: "SonarQubeServer" # Tu conexión de tipo SonarCloud
+          SonarQube: "SonarQubeServer"
           scannerMode: "CLI"
           configMode: "file"
 
