@@ -36,24 +36,18 @@ extends:
 
 ## Requisitos previos para ejecutar el pipeline
 
-1. **Crear el Service Connection de SonarQube y el template (GitHub)**
-   - Ve a la sección de Service Connections en tu proyecto de Azure DevOps.
-   - Crea una conexión de tipo SonarQube llamada `SonarQubeServer`.
-   - Crea una conexión de tipo Docker Registry si vas a publicar imágenes.
-   - ![Service Connection SonarQube](img/sonar-server.png)
-   - ![Service Connection Template](img/sonar-scanner.png)
+1. **Crear los Service Connections necesarios:**
+   - **SonarCloud**: Para análisis de calidad de código. Debe llamarse `SonarQubeServer` en el pipeline.
+     ![Service Connection SonarCloud](img/service-connection-sonar.png)
+   - **GitHub Template**: Para usar plantillas centralizadas desde GitHub.
+     ![Service Connection Template](img/service-connection-template.png)
+   - **Docker Hub**: Para publicar imágenes Docker en Docker Hub.
+     ![Service Connection DockerHub](img/service-connection-docker.png)
 
-2. **Crear el Service Connection de DockerHub (Registry)**
-   - Ve a la sección de Service Connections y crea una conexión de tipo Docker Registry.
-   - Selecciona DockerHub como proveedor y configura las credenciales de tu cuenta.
-   - ![Service Connection DockerHub](img/dockerhub-connection.png)
-
-3. **Tener instalado SonarQube en el proyecto de Azure DevOps**
-   - Instala la extensión de SonarQube desde el marketplace de Azure DevOps.
-   - ![Instalar extensión SonarQube](img/sonar-webhook.png)
-
-4. **(Opcional) Azure Resource Manager**
-   - Para despliegues automáticos a Azure.
+2. **Instalar la extensión de SonarCloud en Azure DevOps:**
+   - Ve al marketplace de Azure DevOps y busca "SonarCloud".
+   - Instala la extensión en tu organización/proyecto.
+   - ![Instalar extensión SonarCloud](img/install-sonar.png)
 
 ## Jobs principales del pipeline
 
