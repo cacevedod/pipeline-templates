@@ -73,11 +73,10 @@ jobs:
         inputs:
           SonarCloud: "SonarQubeServer"
           organization: "cacevedod"
-          scannerMode: "Gradle"
-      - script: "./gradlew sonarqube"
+          scannerMode: "Other"
+      - script: "./gradlew sonarqube -Dsonar.scanner.mode=Gradle"
         displayName: "Run SonarCloud Analysis"
         workingDirectory: ${{ parameters.workingDirectory }}
-
       - task: SonarCloudPublish@1
         displayName: "Publish Quality Gate Result"
         inputs:
@@ -97,6 +96,11 @@ jobs:
         inputs:
           artifact: "drop"
           path: "$(System.DefaultWorkingDirectory)"
+
+      - script: |
+          echo "Verificando el contenido del directorio de trabajo:"
+          ls -lR
+        displayName: "Verify Downloaded Artifacts"
 
       - script: |
           pip install checkov
