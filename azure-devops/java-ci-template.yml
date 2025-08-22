@@ -1,0 +1,119 @@
+parameters:
+  - name: workingDirectory
+    type: string
+    default: "."
+  - name: javaVersion
+    type: string
+    default: "17"
+  - name: runSonar
+    type: boolean
+    default: false
+  - name: runCheckov
+    type: boolean
+    default: false
+  - name: runDockerBuild
+    type: boolean
+    default: false
+  - name: runDockerPush
+    type: boolean
+    default: false
+
+jobs:
+  - job: BuildAndTest
+    displayName: "Build & Unit Tests"
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - checkout: self
+        displayName: "Checkout Repository"
+
+      - task: JavaToolInstaller@0
+        displayName: "Set up JDK ${{ parameters.javaVersion }}"
+        inputs:
+          versionSpec: ${{ parameters.javaVersion }}
+          jdkArchitectureOption: "x64"
+          jdkSourceOption: "PreInstalled"
+
+      - script: |
+          chmod +x gradlew
+          ./gradlew build
+        displayName: "Build & Run Unit Tests with Gradle"
+        workingDirectory: ${{ parameters.workingDirectory }}
+
+      - task: PublishTestResults@2
+        displayName: "Publish Test Results"
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "**/build/test-results/test/TEST-*.xml"
+
+      - task: PublishCodeCoverageResults@1
+        displayName: "Publish Code Coverage"
+        inputs:
+          codeCoverageTool: "JaCoCo"
+          summaryFileLocation: "**/build/reports/jacoco/test/jacocoTestReport.xml"
+
+      - task: PublishPipelineArtifact@1
+        displayName: "Publish JAR Artifact"
+        inputs:
+          targetPath: "${{ parameters.workingDirectory }}/build/libs"
+          artifact: "drop"
+
+  - job: SonarQubeAnalysis
+    displayName: "SonarQube Analysis"
+    dependsOn: BuildAndTest
+    condition: and(succeeded(), eq('${{ parameters.runSonar }}', 'true'))
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - checkout: self
+        fetchDepth: 0
+
+      - task: JavaToolInstaller@0
+        displayName: "Set up JDK ${{ parameters.javaVersion }}"
+        inputs:
+          versionSpec: ${{ parameters.javaVersion }}
+          jdkArchitectureOption: "x64"
+          jdkSourceOption: "PreInstalled"
+
+      - task: SonarQubePrepare@5
+        displayName: "Prepare SonarQube Analysis"
+        inputs:
+          SonarQube: "SonarQubeServer"
+          scannerMode: "Gradle"
+          gradleBuildFile: "${{ parameters.workingDirectory }}/build.gradle"
+
+      - script: "./gradlew sonarqube"
+        displayName: "Run SonarQube Analysis"
+        workingDirectory: ${{ parameters.workingDirectory }}
+
+      - task: SonarQubePublish@5
+        displayName: "Publish Quality Gate Result"
+        inputs:
+          pollingTimeoutSec: "300"
+
+  - job: SecurityAndDocker
+    displayName: "Security Scan & Docker Build/Push"
+    dependsOn: BuildAndTest
+    condition: and(succeeded(), or(eq('${{ parameters.runCheckov }}', 'true'), eq('${{ parameters.runDockerBuild }}', 'true')))
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - checkout: self
+
+      - task: Docker@2
+        displayName: "Build Docker Image"
+        condition: eq('${{ parameters.runDockerBuild }}', 'true')
+        inputs:
+          command: "build"
+          repository: "$(Build.Repository.Name)"
+          dockerfile: "${{ parameters.workingDirectory }}/Dockerfile"
+          tags: "$(Build.SourceVersion)"
+
+      - task: Docker@2
+        displayName: "Push Docker Image"
+        condition: eq('${{ parameters.runDockerPush }}', 'true')
+        inputs:
+          command: "push"
+          repository: "$(Build.Repository.Name)"
+          containerRegistry: "GitHubContainerRegistry"
+          tags: "$(Build.SourceVersion)"

@@ -308,41 +308,55 @@ describe("GET /", () => {
 
 #### 6. `.gitignore`
 
-````ignore
+```ignore
 # Node
 node_modules/
 
-```python
-from fastapi.testclient import TestClient
-from app.main import app
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-client = TestClient(app)
+# Entornos virtuales
+.env
+.venv
+env/
+venv/
+ENV/
 
-def test_read_root():
-    response = client.get("/")
-    assert response.status_code == 200
-    assert response.json() == {"message": "Hola mundo desde FastAPI!"}
-````
+# Cobertura y testing
+.coverage
+htmlcov/
+.pytest_cache/
+test-results.xml
+coverage.xml
 
-#### 5. `requirements.txt`
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
-```
-fastapi>=0.103.1
-uvicorn>=0.23.2
-pytest>=7.4.0
-pytest-cov>=4.1.0
-httpx>=0.24.1  # Para TestClient en FastAPI
-```
-
-#### 6. `Dockerfile`
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Sistema operativo
+.DS_Store
+Thumbs.db
 ```
 
 #### 7. `Dockerfile`
@@ -404,7 +418,7 @@ Puedes agregar más parámetros en el template reusable y documentarlos aquí.
 
 **Importante:** Los agentes deben crear el workflow de cada proyecto usando la sintaxis `uses:` y pasar solo los parámetros requeridos, nunca copiar todo el pipeline. Así, cualquier mejora o fix en el template se replica automáticamente en todos los proyectos.
 
-#### 7. `sonar-project.properties`
+#### 9. `sonar-project.properties`
 
 ```properties
 # Información básica del proyecto
@@ -428,7 +442,7 @@ sonar.sourceEncoding=UTF-8
 sonar.python.version=3
 ```
 
-#### 8. `Jenkinsfile`
+#### 10. `Jenkinsfile`
 
 ```groovy
 @Library('pipeline-templates@main') _
@@ -444,7 +458,94 @@ pythonCi(
 )
 ```
 
-````
+---
+
+## Proyectos Java con Spring Boot y Gradle Wrapper
+
+Para crear un nuevo proyecto Java con Spring Boot y Gradle Wrapper, sigue estos pasos:
+
+### Estructura del Proyecto
+
+Se recomienda la siguiente estructura:
+
+```
+proyecto-java/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── ejemplo/
+│   │   │           ├── DemoApplication.java
+│   │   │           └── controller/
+│   │   │                └── HelloController.java
+│   │   └── resources/
+│   │         └── application.properties
+│   └── test/
+│       └── java/
+│           └── com/
+│               └── ejemplo/
+│                   └── DemoApplicationTests.java
+├── gradle/
+│   └── wrapper/
+│       ├── gradle-wrapper.jar
+│       └── gradle-wrapper.properties
+├── build.gradle
+├── settings.gradle
+├── gradlew            # Script para Unix
+├── gradlew.bat        # Script para Windows
+├── .gitignore
+├── Dockerfile         # Opcional: para contenedorización
+├── README.md
+└── [pipeline]         # Jenkinsfile o .github/workflows/ci.yml según tu CI/CD
+```
+
+### Configuración del Proyecto
+
+1. En el archivo `build.gradle`:
+
+   - Agrega las dependencias de Spring Boot y configura la tarea `bootRun` para ejecutar la aplicación.
+
+2. En `settings.gradle` define el nombre del proyecto:
+
+   ```gradle
+   rootProject.name = 'proyecto-java'
+   ```
+
+3. Usa los scripts `gradlew` y `gradlew.bat` para garantizar que se use la misma versión de Gradle en todos los entornos.
+
+4. Configura el pipeline de CI/CD:
+   - **Jenkins**: Copia el template `Jenkinsfile` correspondiente desde `jenkins-java` o el template adecuado.
+   - **GitHub Actions**: Copia el workflow desde `github-actions-java/ci.yml` a la ruta `.github/workflows/ci.yml`.
+
+### Ejemplo de Dockerfile
+
+Un ejemplo simple de `Dockerfile` es:
+
+```dockerfile
+FROM openjdk:17-jdk-slim
+VOLUME /tmp
+COPY build/libs/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+```
+
+### Comandos Útiles
+
+- Compilar el proyecto: `./gradlew build`
+- Ejecutar la aplicación: `./gradlew bootRun`
+- Ejecutar pruebas: `./gradlew test`
+
+### Buenas Prácticas
+
+1. **Separación de código y pruebas**: Usa `src/` para código y `tests/` para unitarias.
+2. **TypeScript estricto**: Mantén la configuración estricta en `tsconfig.json`.
+3. **Cobertura y reporte JUnit**: Usa Jest con cobertura y reporte JUnit para CI.
+4. **Contenedorización**: Usa Docker para estandarizar entornos.
+5. **CI/CD**: Usa el workflow reusable de GitHub Actions.
+6. **Documentación**: Mantén actualizado el README.md.
+
+---
+
+<!-- Puedes agregar más instrucciones para otros lenguajes y sistemas de CI/CD aquí -->
 
 ### Comandos Útiles
 
@@ -460,98 +561,6 @@ npm test
 
 # Ejecutar en modo desarrollo
 npm run dev
-````
-
-### Buenas Prácticas
-
-1. **Separación de código y pruebas**: Usa `src/` para código y `tests/` para unitarias.
-2. **TypeScript estricto**: Mantén la configuración estricta en `tsconfig.json`.
-3. **Cobertura y reporte JUnit**: Usa Jest con cobertura y reporte JUnit para CI.
-4. **Contenedorización**: Usa Docker para estandarizar entornos.
-5. **CI/CD**: Usa el workflow reusable de GitHub Actions.
-6. **Documentación**: Mantén actualizado el README.md.
-
----
-
-<!-- Puedes agregar más instrucciones para otros lenguajes y sistemas de CI/CD aquí -->
-
-#### 9. `.gitignore`
-
-```
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Entornos virtuales
-.env
-.venv
-env/
-venv/
-ENV/
-
-# Cobertura y testing
-.coverage
-htmlcov/
-.pytest_cache/
-test-results.xml
-coverage.xml
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Sistema operativo
-.DS_Store
-Thumbs.db
-```
-
-### Comandos Útiles
-
-#### Configuración Inicial
-
-```bash
-# Crear estructura de directorios
-mkdir -p app tests
-
-# Crear archivos __init__.py
-touch app/__init__.py tests/__init__.py
-
-# Instalar dependencias
-python -m venv .venv
-source .venv/bin/activate  # En Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-#### Ejecutar la Aplicación (FastAPI)
-
-```bash
-uvicorn app.main:app --reload
-```
-
-#### Ejecutar Pruebas
-
-```bash
-pytest tests/ --cov=app --cov-report=xml --junitxml=test-results.xml
 ```
 
 ### Buenas Prácticas
@@ -564,5 +573,3 @@ pytest tests/ --cov=app --cov-report=xml --junitxml=test-results.xml
 6. **CI/CD**: Utiliza el pipeline de Jenkins para integración continua.
 7. **Análisis de Código**: Configura SonarQube para mejorar la calidad.
 8. **Contenedorización**: Usa Docker para estandarizar entornos de ejecución.
-
-<!-- Las instrucciones para proyectos Node.js y Java se añadirán más adelante -->

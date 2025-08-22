@@ -1,0 +1,54 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.0'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+    id 'jacoco'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+test {
+    useJUnitPlatform()
+    doLast {
+        println "Pruebas ejecutadas: ${getTestCount()}"
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        csv.required = false
+        html.required = false
+    }
+    doLast {
+        def reportFile = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+        if (reportFile.exists()) {
+            def parser = new XmlParser().parse(reportFile)
+            def counter = parser.counter.find { it.@type == 'INSTRUCTION' }
+            if (counter) {
+                def missed = counter.@missed.toInteger()
+                def covered = counter.@covered.toInteger()
+                def total = missed + covered
+                def coverage = total > 0 ? (covered / total * 100).round(2) : 0.0
+                println "Cobertura de código: ${coverage}%"
+            } else {
+                println "No se encontró información de cobertura."
+            }
+        } else {
+            println "Reporte de cobertura no encontrado. Ejecute jacocoTestReport para generar el reporte."
+        }
+    }
+}

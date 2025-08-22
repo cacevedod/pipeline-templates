@@ -1,0 +1,22 @@
+trigger:
+  - main
+
+pr:
+  - main
+
+pool:
+  vmImage: "ubuntu-latest"
+
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: TuProyecto/pipeline-templates
+
+jobs:
+  - template: templates/java-ci-template.yml@main # Ruta al template en el otro repo
+    parameters:
+      runSonar: false
+      runCheckov: false
+      runDockerBuild: true
+      runDockerPush: false
